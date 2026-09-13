@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "../../components/CartContent";
 import { useAuth } from "../../components/AuthProvider";
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { token } = useAuth();
   const { clearCart } = useCart();
+
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<"success" | "failed">("success");
 
@@ -37,7 +38,7 @@ export default function PaymentSuccessPage() {
 
         if (data.status === "paid") {
           setStatus("success");
-          clearCart(); // Clear cart on success
+          clearCart();
         } else {
           setStatus("failed");
         }
@@ -67,20 +68,23 @@ export default function PaymentSuccessPage() {
           {status === "success" ? (
             <>
               <div className="mb-4 text-6xl">✅</div>
+
               <h1 className="text-3xl font-bold text-gray-900">
                 Payment Successful!
               </h1>
+
               <p className="mt-2 text-gray-500">
                 Thank you for your purchase. Your items have been ordered.
               </p>
 
-              <div className="mt-8 flex gap-4 justify-center">
+              <div className="mt-8 flex justify-center gap-4">
                 <Link
-                  href="/marketplace"
+                  href="/Marketplace"
                   className="rounded-xl bg-black px-6 py-3 font-medium text-white hover:bg-gray-800"
                 >
                   Continue Shopping
                 </Link>
+
                 <Link
                   href="/orders"
                   className="rounded-xl border border-gray-200 px-6 py-3 font-medium text-gray-900 hover:bg-gray-50"
@@ -92,9 +96,11 @@ export default function PaymentSuccessPage() {
           ) : (
             <>
               <div className="mb-4 text-6xl">❌</div>
+
               <h1 className="text-3xl font-bold text-gray-900">
                 Payment Failed
               </h1>
+
               <p className="mt-2 text-gray-500">
                 Something went wrong. Please try again.
               </p>
@@ -110,5 +116,19 @@ export default function PaymentSuccessPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <p>Loading payment...</p>
+        </div>
+      }
+    >
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }

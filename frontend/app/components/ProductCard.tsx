@@ -11,7 +11,7 @@ type Product = {
   category: string;
   condition: string;
   location: string;
-  description: string;
+  description?: string;
 };
 
 type ProductCardProps = {
