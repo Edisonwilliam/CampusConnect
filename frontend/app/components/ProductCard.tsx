@@ -3,15 +3,28 @@
 import Link from "next/link";
 import { useCart } from "./CartContent";
 
-const ProductCard = ({ product }) => {
+type Product = {
+  id: number;
+  title: string;
+  price: number;
+  image: string;
+  category: string;
+  condition: string;
+  location: string;
+  description: string;
+};
+
+type ProductCardProps = {
+  product: Product;
+};
+
+const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart, cart } = useCart();
 
   const isInCart = cart.some((item) => item.id === product.id);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-
-      {/* Product Image */}
       <div className="relative h-52 w-full">
         <img
           src={product.image}
@@ -20,9 +33,7 @@ const ProductCard = ({ product }) => {
         />
       </div>
 
-      {/* Product Details */}
       <div className="p-4">
-
         <div className="mb-2 flex items-center justify-between">
           <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
             {product.category}
@@ -62,7 +73,6 @@ const ProductCard = ({ product }) => {
         >
           {isInCart ? "Added to Cart ✓" : "Add to Cart"}
         </button>
-
       </div>
     </div>
   );
