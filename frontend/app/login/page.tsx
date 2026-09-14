@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from ".././components/AuthProvider";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const Login = () => {
   const router = useRouter();
   const { login } = useAuth();
@@ -32,7 +34,7 @@ const Login = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/auth/login",
+        `${API_URL}/auth/login`,
         {
           method: "POST",
           headers: {
@@ -67,7 +69,7 @@ const Login = () => {
   };
 
     const handleGoogleLogin = () => {
-  window.location.href = "http://localhost:5000/auth/google";
+  window.location.href = `${API_URL}/auth/google`;
     };
 
   return (

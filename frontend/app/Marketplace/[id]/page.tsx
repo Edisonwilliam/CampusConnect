@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../components/AuthProvider";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 type Product = {
   id: number;
   title: string;
@@ -42,7 +44,7 @@ const ProductDetails = () => {
     const loadProduct = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/marketplace/${params.id}`
+          `${API_URL}/marketplace/${params.id}`
         );
 
         if (!response.ok) {
@@ -61,7 +63,7 @@ const ProductDetails = () => {
           description: data.description,
           sellerId: data.sellerId,
           image: data.image
-            ? `http://localhost:5000${data.image}`
+            ? `${API_URL}${data.image}`
             : "/placeholder.jpg",
         };
 
@@ -107,7 +109,7 @@ const ProductDetails = () => {
       const token = localStorage.getItem("access_token");
 
       const response = await fetch(
-        `http://localhost:5000/marketplace/${product.id}`,
+        `${API_URL}/marketplace/${product.id}`,
         {
           method: "DELETE",
           headers: {
@@ -145,7 +147,7 @@ const ProductDetails = () => {
       const token = localStorage.getItem("access_token");
 
       const response = await fetch(
-        `http://localhost:5000/marketplace/${product.id}`,
+        `${API_URL}/marketplace/${product.id}`,
         {
           method: "PATCH",
           headers: {

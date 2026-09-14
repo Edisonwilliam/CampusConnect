@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const Register = () => {
   const router = useRouter();
 
@@ -31,7 +33,7 @@ const Register = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/auth/register",
+        `${API_URL}/auth/register`,
         {
           method: "POST",
           headers: {
@@ -64,7 +66,7 @@ const Register = () => {
   };
 
  const handleGoogleSignup = () => {
-  window.location.href = "http://localhost:5000/auth/google";
+  window.location.href = `${API_URL}/auth/google`;
 };
 
   return (

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 type Service = {
   id: number;
   title: string;
@@ -32,7 +34,7 @@ export default function ServiceDetailsPage() {
     const fetchService = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/services/${params.id}`,
+          `${API_URL}/services/${params.id}`,
           {
             cache: "no-store",
             signal: controller.signal,
@@ -130,7 +132,7 @@ export default function ServiceDetailsPage() {
           {service.image && (
             <div className="border-b border-gray-100">
               <img
-                src={`http://localhost:5000${service.image}`}
+                src={`${API_URL}${service.image}`}
                 alt={service.title}
                 className="h-72 w-full object-cover sm:h-96"
               />

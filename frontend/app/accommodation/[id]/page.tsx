@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 type Accommodation = {
   id: number;
   title: string;
@@ -70,7 +72,7 @@ const AccommodationDetails = () => {
     const loadAccommodation = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/accommodation/${params.id}`
+          `${API_URL}/accommodation/${params.id}`
         );
 
         if (!response.ok) {
@@ -86,7 +88,7 @@ const AccommodationDetails = () => {
           type: data.type,
           location: data.location,
           image: data.image
-            ? `http://localhost:5000${data.image}`
+            ? `${API_URL}${data.image}`
             : "/placeholder.jpg",
           description: data.description,
           contact: data.contact,
@@ -150,7 +152,7 @@ const AccommodationDetails = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/accommodation/${params.id}`,
+        `${API_URL}/accommodation/${params.id}`,
         {
           method: "PATCH",
           headers: {
@@ -181,7 +183,7 @@ const AccommodationDetails = () => {
         ...result,
         price: Number(result.price),
         image: result.image
-          ? `http://localhost:5000${result.image}`
+          ? `${API_URL}${result.image}`
           : "/placeholder.jpg",
       });
 
@@ -218,7 +220,7 @@ const AccommodationDetails = () => {
       setDeleting(true);
 
       const response = await fetch(
-        `http://localhost:5000/accommodation/${params.id}`,
+        `${API_URL}/accommodation/${params.id}`,
         {
           method: "DELETE",
           headers: {

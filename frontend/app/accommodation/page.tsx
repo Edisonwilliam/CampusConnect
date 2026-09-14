@@ -45,13 +45,15 @@ const Accommodation = () => {
     image: null as File | null,
   });
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   const [imagePreview, setImagePreview] = useState("");
 
   useEffect(() => {
     const loadAccommodations = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/accommodation"
+          `${API_URL}/accommodation`
         );
 
         if (!response.ok) {
@@ -68,7 +70,7 @@ const Accommodation = () => {
             type: item.type,
             location: item.location,
             image: item.image
-              ? `http://localhost:5000${item.image}`
+              ? `${API_URL}${item.image}`
               : "/placeholder.jpg",
             description: item.description,
             contact: item.contact,
@@ -185,7 +187,7 @@ const Accommodation = () => {
       }
 
       const response = await fetch(
-        "http://localhost:5000/accommodation",
+        `${API_URL}/accommodation`,
         {
           method: "POST",
           headers: {
@@ -211,7 +213,7 @@ const Accommodation = () => {
         type: result.type,
         location: result.location,
         image: result.image
-          ? `http://localhost:5000${result.image}`
+          ? `${API_URL}${result.image}`
           : "/placeholder.jpg",
         description: result.description,
         contact: result.contact,

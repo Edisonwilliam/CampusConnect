@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 type Service = {
   id: number;
   title: string;
@@ -58,7 +60,7 @@ const ServicesPage = () => {
     const fetchServices = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/services",
+          `${API_URL}/services`,
           {
             cache: "no-store",
             signal: controller.signal,
@@ -169,7 +171,7 @@ const ServicesPage = () => {
       }
 
       const response = await fetch(
-        "http://localhost:5000/services",
+        `${API_URL}/services`,
         {
           method: "POST",
           headers: {
@@ -520,7 +522,7 @@ const ServicesPage = () => {
                 >
                   {service.image && (
                     <img
-                      src={`http://localhost:5000${service.image}`}
+                      src={`${API_URL}${service.image}`}
                       alt={service.title}
                       className="h-48 w-full object-cover"
                     />

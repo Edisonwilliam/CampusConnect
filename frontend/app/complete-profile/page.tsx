@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function CompleteProfile() {
   const router = useRouter();
   const { user, token, login, loading } = useAuth();
@@ -45,7 +47,7 @@ export default function CompleteProfile() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/users/${user.id}`,
+        `${API_URL}/users/${user.id}`,
         {
           method: "PATCH",
           headers: {

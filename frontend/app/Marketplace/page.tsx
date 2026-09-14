@@ -5,6 +5,8 @@ import ProductCard from "../components/ProductCard";
 import { getListings } from ".././lib/api";
 import Image from "next/image";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 type Product = {
   id: number;
   title: string;
@@ -61,7 +63,7 @@ const Marketplace = () => {
             location: listing.location,
             description: listing.description,
             image: listing.image
-              ? `http://localhost:5000${listing.image}`
+              ? `${API_URL}${listing.image}`
               : "/placeholder.jpg",
           })
         );
@@ -178,7 +180,7 @@ const Marketplace = () => {
       }
 
       const response = await fetch(
-        "http://localhost:5000/marketplace",
+        `${API_URL}/marketplace`,
         {
           method: "POST",
           headers: {
@@ -205,7 +207,7 @@ const Marketplace = () => {
         location: result.location,
         description: result.description,
         image: result.image
-          ? `http://localhost:5000${result.image}`
+          ? `${API_URL}${result.image}`
           : "/placeholder.jpg",
       };
 
