@@ -32,7 +32,13 @@ import { PaymentModule } from './payments/payment.module';
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       synchronize: true,
+
+       ssl: {
+    rejectUnauthorized: false,
+      },
     }),
+
+   
 
     UsersModule,
     AuthModule,

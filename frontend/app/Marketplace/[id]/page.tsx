@@ -33,6 +33,7 @@ const ProductDetails = () => {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   const [editData, setEditData] = useState({
     title: "",
@@ -124,7 +125,9 @@ const ProductDetails = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to delete listing");
+        throw new Error(
+          data.message || "Failed to delete listing"
+        );
       }
 
       router.push("/Marketplace");
@@ -172,7 +175,9 @@ const ProductDetails = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to update listing");
+        throw new Error(
+          data.message || "Failed to update listing"
+        );
       }
 
       setProduct({
@@ -214,6 +219,12 @@ const ProductDetails = () => {
       },
       quantity
     );
+
+    setAddedToCart(true);
+
+    setTimeout(() => {
+      setAddedToCart(false);
+    }, 2000);
   };
 
   if (loading) {
@@ -322,7 +333,9 @@ const ProductDetails = () => {
                       }
                       className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
                     >
-                      <option value="Electronics">Electronics</option>
+                      <option value="Electronics">
+                        Electronics
+                      </option>
                       <option value="Books">Books</option>
                       <option value="Fashion">Fashion</option>
                       <option value="Furniture">Furniture</option>
@@ -509,10 +522,19 @@ const ProductDetails = () => {
 
                 <button
                   onClick={handleAddToCart}
-                  className="mt-6 w-full rounded-xl bg-black py-4 font-medium text-white transition hover:bg-gray-800"
+                  className={`mt-6 w-full rounded-xl py-4 font-medium text-white transition ${
+                    addedToCart
+                      ? "bg-green-600 hover:bg-green-600"
+                      : "bg-black hover:bg-gray-800"
+                  }`}
                 >
-                  Add {quantity}{" "}
-                  {quantity === 1 ? "Item" : "Items"} to Cart
+                  {addedToCart
+                    ? `✓ Added ${quantity} ${
+                        quantity === 1 ? "Item" : "Items"
+                      } to Cart`
+                    : `Add ${quantity} ${
+                        quantity === 1 ? "Item" : "Items"
+                      } to Cart`}
                 </button>
               </>
             )}
