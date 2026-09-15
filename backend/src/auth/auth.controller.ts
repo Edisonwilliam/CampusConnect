@@ -47,7 +47,7 @@ export class AuthController {
     });
 
     return res.redirect(
-      `${frontendUrl}/auth/google/callback?${params.toString()}`,
+      `${frontendUrl}?${params.toString()}`,
     );
   }
 
