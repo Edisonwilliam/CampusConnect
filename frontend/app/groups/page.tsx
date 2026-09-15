@@ -4,6 +4,8 @@ import { useAuth } from "../components/AuthProvider";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 type StudyGroup = {
   id: number;
   name: string;
@@ -45,7 +47,7 @@ export default function StudyGroupsPage() {
     const fetchStudyGroups = async () => {
       try {
         const response = await fetch(
-          "http://127.0.0.1:5000/study-groups",
+          `${API_URL}/study-groups`,
           {
             cache: "no-store",
             signal: controller.signal,
@@ -109,7 +111,7 @@ export default function StudyGroupsPage() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/study-groups",
+        `${API_URL}/study-groups`,
         {
           method: "POST",
           headers: {
