@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { useAuth } from "../../components/AuthProvider";
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 type StudyGroup = {
   id: number;
   name: string;
@@ -38,7 +40,7 @@ export default function StudyGroupDetailsPage() {
     const fetchStudyGroup = async () => {
       try {
         const response = await fetch(
-          `http://127.0.0.1:5000/study-groups/${params.id}`,
+          `${API_URL}/study-groups/${params.id}`,
           {
             cache: "no-store",
             signal: controller.signal,
@@ -89,7 +91,7 @@ export default function StudyGroupDetailsPage() {
   const checkMembership = async () => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/study-groups/${params.id}/membership`,
+        `${API_URL}/study-groups/${params.id}/membership`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -134,7 +136,7 @@ export default function StudyGroupDetailsPage() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/study-groups/${params.id}/join`,
+        `${API_URL}/study-groups/${params.id}/join`,
         {
           method: "POST",
           headers: {
@@ -183,7 +185,7 @@ export default function StudyGroupDetailsPage() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/study-groups/${params.id}/leave`,
+        `${API_URL}/study-groups/${params.id}/leave`,
         {
           method: "DELETE",
           headers: {
