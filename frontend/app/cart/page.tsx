@@ -8,14 +8,26 @@ import { useCart } from "../components/CartContent";
 import { useAuth } from "../components/AuthProvider";
 
 const CartPage = () => {
-  const { cart, removeFromCart, clearCart } = useCart();
+  const {
+    cart,
+    increaseQuantity,
+    decreaseQuantity,
+    removeFromCart,
+    clearCart,
+  } = useCart();
+
   const { token } = useAuth();
   const router = useRouter();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const total = cart.reduce((sum, product) => {
-    return sum + product.price;
+    return sum + product.price * product.quantity;
+  }, 0);
+
+  const totalItems = cart.reduce((sum, product) => {
+    return sum + product.quantity;
   }, 0);
 
   const handleCheckout = async () => {
@@ -33,11 +45,6 @@ const CartPage = () => {
     setError(null);
 
     try {
-      console.log("📤 Sending checkout request...");
-      console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
-      console.log("Token:", token);
-      console.log("Cart items:", cart);
-
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/payments/create-checkout-session`,
         {
@@ -50,17 +57,15 @@ const CartPage = () => {
         }
       );
 
-      console.log("📥 Response status:", response.status);
-
       const data = await response.json();
-      console.log("📥 Response data:", data);
 
       if (!response.ok) {
-        throw new Error(data.message || `Server error: ${response.status}`);
+        throw new Error(
+          data.message || `Server error: ${response.status}`
+        );
       }
 
       const { url } = data;
-      console.log("✅ Checkout URL:", url);
 
       if (url) {
         window.location.href = url;
@@ -68,8 +73,12 @@ const CartPage = () => {
         throw new Error("No checkout URL in response");
       }
     } catch (err: any) {
-      console.error("❌ Checkout error:", err);
-      setError(err.message || "Failed to proceed to checkout. Please try again.");
+      console.error("Checkout error:", err);
+
+      setError(
+        err.message ||
+          "Failed to proceed to checkout. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -78,13 +87,15 @@ const CartPage = () => {
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8 md:px-8 lg:px-16">
       <div className="mx-auto max-w-6xl">
-        {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Your Cart</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Your Cart
+            </h1>
 
             <p className="mt-2 text-gray-500">
-              {cart.length} {cart.length === 1 ? "item" : "items"} in your cart
+              {totalItems}{" "}
+              {totalItems === 1 ? "item" : "items"} in your cart
             </p>
           </div>
 
@@ -98,7 +109,6 @@ const CartPage = () => {
           )}
         </div>
 
-        {/* Empty Cart */}
         {cart.length === 0 ? (
           <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 text-center">
             <div className="mb-4 text-5xl">🛒</div>
@@ -120,14 +130,12 @@ const CartPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            {/* Cart Items */}
             <div className="space-y-4 lg:col-span-2">
               {cart.map((product) => (
                 <div
                   key={product.id}
                   className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 sm:flex-row"
                 >
-                  {/* Product Image */}
                   <div className="relative h-40 w-full shrink-0 overflow-hidden rounded-xl sm:h-32 sm:w-32">
                     <Image
                       src={product.image}
@@ -137,7 +145,6 @@ const CartPage = () => {
                     />
                   </div>
 
-                  {/* Product Information */}
                   <div className="flex flex-1 flex-col justify-between">
                     <div>
                       <div className="flex items-start justify-between gap-4">
@@ -164,19 +171,58 @@ const CartPage = () => {
                       </div>
                     </div>
 
-                    {/* Remove */}
-                    <button
-                      onClick={() => removeFromCart(product.id)}
-                      className="mt-4 w-fit text-sm font-medium text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center rounded-lg border border-gray-300">
+                        <button
+                          onClick={() =>
+                            decreaseQuantity(product.id)
+                          }
+                          className="px-4 py-2 text-lg font-medium text-gray-700 hover:bg-gray-100"
+                        >
+                          −
+                        </button>
+
+                        <span className="min-w-10 text-center font-semibold text-gray-900">
+                          {product.quantity}
+                        </span>
+
+                        <button
+                          onClick={() =>
+                            increaseQuantity(product.id)
+                          }
+                          className="px-4 py-2 text-lg font-medium text-gray-700 hover:bg-gray-100"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">
+                          Subtotal
+                        </p>
+
+                        <p className="font-bold text-gray-900">
+                          ₦
+                          {(
+                            product.price * product.quantity
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          removeFromCart(product.id)
+                        }
+                        className="text-sm font-medium text-red-500 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Order Summary */}
             <div className="h-fit rounded-2xl border border-gray-200 bg-white p-6">
               <h2 className="text-xl font-bold text-gray-900">
                 Order Summary
@@ -187,7 +233,7 @@ const CartPage = () => {
                   <span className="text-gray-500">Items</span>
 
                   <span className="font-medium text-gray-900">
-                    {cart.length}
+                    {totalItems}
                   </span>
                 </div>
 
@@ -211,20 +257,20 @@ const CartPage = () => {
                   </div>
                 </div>
 
-                {/* Error Message */}
                 {error && (
                   <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
                     {error}
                   </div>
                 )}
 
-                {/* Checkout Button */}
                 <button
                   onClick={handleCheckout}
                   disabled={loading || cart.length === 0}
-                  className="mt-4 w-full rounded-xl bg-black py-4 font-medium text-white transition hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-4 w-full rounded-xl bg-black py-4 font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {loading ? "Processing..." : "Proceed to Checkout"}
+                  {loading
+                    ? "Processing..."
+                    : "Proceed to Checkout"}
                 </button>
 
                 <Link

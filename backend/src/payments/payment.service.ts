@@ -7,10 +7,13 @@ export class PaymentService {
   private stripe: Stripe;
 
   constructor(private readonly configService: ConfigService) {
-    const stripeKey = this.configService.get<string>('STRIPE_SECRET_KEY');
-    
+    const stripeKey =
+      this.configService.get<string>('STRIPE_SECRET_KEY');
+
     if (!stripeKey) {
-      throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
+      throw new Error(
+        'STRIPE_SECRET_KEY is not defined in environment variables',
+      );
     }
 
     this.stripe = new Stripe(stripeKey);
@@ -20,7 +23,8 @@ export class PaymentService {
     items: any[],
     userId: number,
   ): Promise<Stripe.Checkout.Session> {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL');
 
     const lineItems = items.map((item) => ({
       price_data: {
@@ -32,7 +36,7 @@ export class PaymentService {
         },
         unit_amount: item.price * 100,
       },
-      quantity: 1,
+      quantity: item.quantity || 1,
     }));
 
     const session = await this.stripe.checkout.sessions.create({
