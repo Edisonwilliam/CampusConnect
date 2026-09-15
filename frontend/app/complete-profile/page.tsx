@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/AuthProvider";
 
@@ -8,15 +8,37 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function CompleteProfile() {
   const router = useRouter();
-  const { user, token, login, loading } = useAuth();
+
+  const {
+    user,
+    token,
+    login,
+    loading,
+  } = useAuth();
 
   const [formData, setFormData] = useState({
-    school: user?.school || "",
-    department: user?.department || "",
-    level: user?.level || "",
+    school: "",
+    department: "",
+    level: "",
   });
 
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        school: user.school || "",
+        department: user.department || "",
+        level: user.level || "",
+      });
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -27,7 +49,6 @@ export default function CompleteProfile() {
   }
 
   if (!user || !token) {
-    router.push("/login");
     return null;
   }
 
@@ -61,12 +82,14 @@ export default function CompleteProfile() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to update profile");
+        throw new Error(
+          data.message || "Failed to update profile"
+        );
       }
 
       login(token, data);
 
-      router.push("/");
+      router.replace("/");
     } catch (error) {
       console.error(error);
 

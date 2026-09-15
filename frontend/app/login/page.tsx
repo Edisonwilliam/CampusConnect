@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState , useEffect} from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from ".././components/AuthProvider";
 
@@ -10,13 +10,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const Login = () => {
   const router = useRouter();
-  const { login, isAuthenticated, loading: authLoading } = useAuth();
+  const { login } = useAuth();
 
-  useEffect(() => {
-  if (!authLoading && isAuthenticated) {
-    router.replace("/");
-  }
-}, [authLoading, isAuthenticated, router]);
   
 
   const [formData, setFormData] = useState({
@@ -199,7 +194,7 @@ const Login = () => {
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            Don't have an account?{" "}
+            Do not have an account?{" "}
             <Link
               href="/register"
               className="font-medium text-black hover:underline"
