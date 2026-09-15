@@ -1,10 +1,25 @@
-import Link from "next/link";
+"use client";
+
+import { useAuth } from "../components/AuthProvider";
+import { useRouter } from "next/navigation";
 
 const CTA = () => {
+  const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
+
+  const handleGetStarted = () => {
+    if (loading) return;
+
+    if (isAuthenticated) {
+      router.push("/");
+    } else {
+      router.push("/register");
+    }
+  };
+
   return (
     <section className="bg-blue-600 py-20">
       <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-
         <h2 className="text-3xl font-bold text-white sm:text-4xl">
           Your campus. Your community. One place.
         </h2>
@@ -13,13 +28,13 @@ const CTA = () => {
           Join CampusConnect and make your campus experience more connected.
         </p>
 
-        <Link
-          href="/register"
-          className="mt-8 inline-block rounded-lg bg-white px-7 py-3 text-sm font-semibold text-blue-600 transition hover:bg-gray-100"
+        <button
+          onClick={handleGetStarted}
+          disabled={loading}
+          className="mt-8 inline-block rounded-lg bg-white px-7 py-3 text-sm font-semibold text-blue-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-70"
         >
           Get Started
-        </Link>
-
+        </button>
       </div>
     </section>
   );
