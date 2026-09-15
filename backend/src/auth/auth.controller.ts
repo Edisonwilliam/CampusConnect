@@ -39,7 +39,7 @@ export class AuthController {
   async googleCallback(@Request() req: any, @Res() res: Response) {
     const result = await this.authService.googleLogin(req.user);
 
-    const frontendUrl = `${process.env.FRONTEND_URL}/auth/google/callback`;
+    const frontendUrl = `${process.env.FRONTEND_URL}`;
 
     const params = new URLSearchParams({
       token: result.access_token,
