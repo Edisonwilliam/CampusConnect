@@ -42,9 +42,10 @@ export class AuthController {
     const frontendUrl = `${process.env.FRONTEND_URL}`;
 
     const params = new URLSearchParams({
-      token: result.access_token,
-      user: JSON.stringify(result.user),
-    });
+  token: result.access_token,
+  user: JSON.stringify(result.user),
+  isNewUser: String(result.isNewUser),
+});
 
     return res.redirect(
       `${frontendUrl}/auth/google/callback?${params.toString()}`,

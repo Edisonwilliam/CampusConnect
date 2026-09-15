@@ -85,7 +85,11 @@ export class AuthService {
       email: googleUser.email,
     });
 
+    let isNewUser = false;
+
     if (!user) {
+      isNewUser = true;
+
       user = this.userRepository.create({
         email: googleUser.email,
         firstName: googleUser.firstName,
@@ -113,6 +117,7 @@ export class AuthService {
     return {
       access_token: accessToken,
       user: result,
+      isNewUser,
     };
   }
 
