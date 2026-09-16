@@ -12,8 +12,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { diskStorage } from 'multer';  // ✅ Change to diskStorage
+import { extname } from 'path';
 
 import { AccommodationService } from './accommodation.service';
 import { CreateAccommodationDto } from './dto/create-accommodation.dto';
@@ -41,12 +41,9 @@ export class AccommodationController {
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
-        destination: join(process.cwd(), 'uploads'),
-        filename: (_req, file, callback) => {
-          const uniqueName =
-            `${Date.now()}-${Math.round(Math.random() * 1e9)}` +
-            extname(file.originalname);
-
+        destination: 'uploads/', // ✅ Save to disk
+        filename: (req, file, callback) => {
+          const uniqueName = `${Date.now()}${extname(file.originalname)}`;
           callback(null, uniqueName);
         },
       }),
@@ -57,7 +54,6 @@ export class AccommodationController {
             false,
           );
         }
-
         callback(null, true);
       },
       limits: {
