@@ -13,7 +13,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -30,7 +31,13 @@ export class ServicesController {
   @Post()
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: memoryStorage(),
+      storage: diskStorage({
+        destination: 'uploads/',
+        filename: (_req, file, callback) => {
+          const uniqueName = `${Date.now()}${extname(file.originalname)}`;
+          callback(null, uniqueName);
+        },
+      }),
 
       fileFilter: (_req, file, callback) => {
         if (!file.mimetype.startsWith('image/')) {
