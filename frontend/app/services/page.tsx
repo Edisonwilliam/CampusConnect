@@ -33,7 +33,7 @@ const categories = [
 ];
 
 const ServicesPage = () => {
-  const { token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated, user } = useAuth();
 
   const [services, setServices] = useState<Service[]>([]);
   const [search, setSearch] = useState("");
@@ -59,18 +59,13 @@ const ServicesPage = () => {
 
     const fetchServices = async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/services`,
-          {
-            cache: "no-store",
-            signal: controller.signal,
-          }
-        );
+        const response = await fetch(`${API_URL}/services`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
-          throw new Error(
-            `Failed to fetch services: ${response.status}`
-          );
+          throw new Error(`Failed to fetch services: ${response.status}`);
         }
 
         const data = await response.json();
@@ -170,16 +165,13 @@ const ServicesPage = () => {
         data.append("image", formData.image);
       }
 
-      const response = await fetch(
-        `${API_URL}/services`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: data,
-        }
-      );
+      const response = await fetch(`${API_URL}/services`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      });
 
       const result = await response.json();
 
@@ -215,6 +207,53 @@ const ServicesPage = () => {
       );
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (serviceId: number) => {
+    if (!token) {
+      alert("Please log in.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this service?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(
+        `${API_URL}/services/${serviceId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message || "Failed to delete service"
+        );
+      }
+
+      setServices((prev) =>
+        prev.filter((service) => service.id !== serviceId)
+      );
+
+      alert("Service deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting service:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong"
+      );
     }
   };
 
@@ -515,6 +554,14 @@ const ServicesPage = () => {
             {filteredServices.map((service) => {
               const provider = `${service.user.firstName} ${service.user.lastName}`;
 
+              const isOwner =
+                user?.id === service.user.id;
+
+              const isAdmin = user?.role === "admin";
+
+              const canManage =
+                isOwner || isAdmin;
+
               return (
                 <div
                   key={service.id}
@@ -566,6 +613,27 @@ const ServicesPage = () => {
                     >
                       View Service
                     </Link>
+
+                    {canManage && (
+                      <div className="mt-3 grid grid-cols-2 gap-3">
+                        <Link
+                          href={`/services/${service.id}/edit`}
+                          className="rounded-xl border border-gray-300 px-4 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                        >
+                          Edit
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDelete(service.id)
+                          }
+                          className="rounded-xl bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

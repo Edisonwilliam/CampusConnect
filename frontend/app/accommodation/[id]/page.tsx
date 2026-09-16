@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuth } from "../../components/AuthProvider";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -19,13 +20,6 @@ type Accommodation = {
   ownerName: string;
 };
 
-type User = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-};
-
 const accommodationTypes = [
   "Hostel",
   "Apartment",
@@ -36,12 +30,10 @@ const accommodationTypes = [
 const AccommodationDetails = () => {
   const params = useParams();
   const router = useRouter();
+  const { token, user } = useAuth();
 
   const [accommodation, setAccommodation] =
     useState<Accommodation | null>(null);
-
-  const [currentUser, setCurrentUser] =
-    useState<User | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -55,18 +47,6 @@ const AccommodationDetails = () => {
     contact: "",
     description: "",
   });
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-
-    if (storedUser) {
-      try {
-        setCurrentUser(JSON.parse(storedUser));
-      } catch {
-        localStorage.removeItem("user");
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const loadAccommodation = async () => {
@@ -107,10 +87,7 @@ const AccommodationDetails = () => {
           description: accommodationData.description,
         });
       } catch (error) {
-        console.error(
-          "Failed to load accommodation:",
-          error
-        );
+        console.error("Failed to load accommodation:", error);
       } finally {
         setLoading(false);
       }
@@ -122,9 +99,13 @@ const AccommodationDetails = () => {
   }, [params.id]);
 
   const isOwner =
-    currentUser &&
-    accommodation &&
-    currentUser.id === accommodation.ownerId;
+    user?.id === accommodation?.ownerId;
+
+  const isAdmin =
+    user?.role === "admin";
+
+  const canManage =
+    isOwner || isAdmin;
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -141,9 +122,6 @@ const AccommodationDetails = () => {
     e: React.FormEvent
   ) => {
     e.preventDefault();
-
-    const token =
-      localStorage.getItem("access_token");
 
     if (!token) {
       alert("Please log in.");
@@ -207,9 +185,6 @@ const AccommodationDetails = () => {
     );
 
     if (!confirmed) return;
-
-    const token =
-      localStorage.getItem("access_token");
 
     if (!token) {
       alert("Please log in.");
@@ -354,7 +329,7 @@ const AccommodationDetails = () => {
               </p>
             </div>
 
-            {isOwner ? (
+            {canManage ? (
               <div className="mt-8 flex gap-3">
 
                 <button
@@ -388,7 +363,6 @@ const AccommodationDetails = () => {
         </div>
       </div>
 
-      {/* Edit Modal */}
       {showEditForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
 

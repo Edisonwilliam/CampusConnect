@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';  // ✅ Change to diskStorage
+import { diskStorage } from 'multer';  
 import { extname } from 'path';
 
 import { AccommodationService } from './accommodation.service';

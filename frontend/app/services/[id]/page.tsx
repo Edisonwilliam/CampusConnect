@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuth } from "../../components/AuthProvider";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -24,9 +25,13 @@ type Service = {
 
 export default function ServiceDetailsPage() {
   const params = useParams();
+  const router = useRouter();
+
+  const { token, user } = useAuth();
 
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -74,11 +79,62 @@ export default function ServiceDetailsPage() {
     };
   }, [params.id]);
 
+  const handleDelete = async () => {
+    if (!token || !service) {
+      alert("Please log in.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this service?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+
+      const response = await fetch(
+        `${API_URL}/services/${service.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message || "Failed to delete service"
+        );
+      }
+
+      alert("Service deleted successfully!");
+
+      router.push("/services");
+    } catch (error) {
+      console.error("Error deleting service:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong"
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <p className="text-gray-500">Loading service...</p>
+          <p className="text-gray-500">
+            Loading service...
+          </p>
         </div>
       </main>
     );
@@ -117,6 +173,12 @@ export default function ServiceDetailsPage() {
   }
 
   const provider = `${service.user.firstName} ${service.user.lastName}`;
+
+  const isOwner = user?.id === service.user.id;
+
+  const isAdmin = user?.role === "admin";
+
+  const canManage = isOwner || isAdmin;
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 lg:px-8">
@@ -200,6 +262,30 @@ export default function ServiceDetailsPage() {
               </p>
             </div>
           </div>
+
+          {canManage && (
+            <div className="border-t border-gray-100 p-6 sm:p-8">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href={`/services/${service.id}/edit`}
+                  className="rounded-xl border border-gray-300 px-6 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                >
+                  Edit Service
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="rounded-xl bg-red-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {deleting
+                    ? "Deleting..."
+                    : "Delete Service"}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="border-t border-gray-100 bg-gray-50 p-6 sm:p-8">
             <h2 className="text-lg font-semibold text-gray-900">
