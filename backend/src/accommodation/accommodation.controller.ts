@@ -12,8 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';  
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 
 import { AccommodationService } from './accommodation.service';
 import { CreateAccommodationDto } from './dto/create-accommodation.dto';
@@ -40,13 +39,8 @@ export class AccommodationController {
   @Post()
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: 'uploads/', // ✅ Save to disk
-        filename: (req, file, callback) => {
-          const uniqueName = `${Date.now()}${extname(file.originalname)}`;
-          callback(null, uniqueName);
-        },
-      }),
+      storage: memoryStorage(),
+
       fileFilter: (_req, file, callback) => {
         if (!file.mimetype.startsWith('image/')) {
           return callback(
@@ -54,8 +48,10 @@ export class AccommodationController {
             false,
           );
         }
+
         callback(null, true);
       },
+
       limits: {
         fileSize: 5 * 1024 * 1024,
       },
@@ -75,9 +71,30 @@ export class AccommodationController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+
+      fileFilter: (_req, file, callback) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return callback(
+            new Error('Only image files are allowed'),
+            false,
+          );
+        }
+
+        callback(null, true);
+      },
+
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
   update(
     @Param('id') id: string,
     @Body() updateAccommodationDto: UpdateAccommodationDto,
+    @UploadedFile() file: Express.Multer.File,
     @Request() req: any,
   ) {
     return this.accommodationService.update(
@@ -85,6 +102,7 @@ export class AccommodationController {
       updateAccommodationDto,
       req.user.userId,
       req.user.role,
+      file,
     );
   }
 

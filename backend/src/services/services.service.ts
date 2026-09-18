@@ -2,9 +2,12 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Inject } from '@nestjs/common';
+
 import { Service } from './service.entity';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { User } from '../users/user.entity';
@@ -17,6 +20,9 @@ export class ServicesService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @Inject('CLOUDINARY')
+    private readonly cloudinary: any,
   ) {}
 
   async create(
@@ -29,14 +35,36 @@ export class ServicesService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new UnauthorizedException('User not found');
+    }
+
+    let imageUrl: string | undefined;
+
+    if (file) {
+      const result = await new Promise<any>((resolve, reject) => {
+        const uploadStream = this.cloudinary.uploader.upload_stream(
+          {
+            folder: 'campusconnect/services',
+            resource_type: 'image',
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          },
+        );
+
+        uploadStream.end(file.buffer);
+      });
+
+      imageUrl = result.secure_url;
     }
 
     const service = this.serviceRepository.create({
       ...createServiceDto,
-      image: file
-        ? `/uploads/${file.filename}`
-        : undefined,
+      image: imageUrl,
       userId,
       user,
     });
@@ -75,6 +103,7 @@ export class ServicesService {
     updateData: Partial<CreateServiceDto>,
     userId: number,
     role: string,
+    file?: Express.Multer.File,
   ): Promise<Service> {
     const service = await this.findOne(id);
 
@@ -84,7 +113,35 @@ export class ServicesService {
       );
     }
 
+    let imageUrl: string | undefined;
+
+    if (file) {
+      const result = await new Promise<any>((resolve, reject) => {
+        const uploadStream = this.cloudinary.uploader.upload_stream(
+          {
+            folder: 'campusconnect/services',
+            resource_type: 'image',
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          },
+        );
+
+        uploadStream.end(file.buffer);
+      });
+
+      imageUrl = result.secure_url;
+    }
+
     Object.assign(service, updateData);
+
+    if (imageUrl) {
+      service.image = imageUrl;
+    }
 
     return this.serviceRepository.save(service);
   }

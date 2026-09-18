@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Inject } from '@nestjs/common';
 
 import { Accommodation } from './accommodation.entity';
 import { User } from '../users/user.entity';
@@ -20,6 +21,9 @@ export class AccommodationService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @Inject('CLOUDINARY')
+    private readonly cloudinary: any,
   ) {}
 
   async create(
@@ -35,9 +39,33 @@ export class AccommodationService {
       throw new UnauthorizedException('User not found');
     }
 
+    let imageUrl: string | undefined;
+
+    if (file) {
+      const result = await new Promise<any>((resolve, reject) => {
+        const uploadStream = this.cloudinary.uploader.upload_stream(
+          {
+            folder: 'campusconnect/accommodation',
+            resource_type: 'image',
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          },
+        );
+
+        uploadStream.end(file.buffer);
+      });
+
+      imageUrl = result.secure_url;
+    }
+
     const accommodation = this.accommodationRepository.create({
       ...createAccommodationDto,
-      image: file ? `/uploads/${file.filename}` : undefined,
+      image: imageUrl,
       ownerId: user.id,
       ownerName: `${user.firstName} ${user.lastName}`,
     });
@@ -71,6 +99,7 @@ export class AccommodationService {
     updateAccommodationDto: UpdateAccommodationDto,
     userId: number,
     role: string,
+    file?: Express.Multer.File,
   ) {
     const accommodation = await this.findOne(id);
 
@@ -83,12 +112,37 @@ export class AccommodationService {
       );
     }
 
-    await this.accommodationRepository.update(
-      id,
-      updateAccommodationDto,
-    );
+    let imageUrl: string | undefined;
 
-    return this.findOne(id);
+    if (file) {
+      const result = await new Promise<any>((resolve, reject) => {
+        const uploadStream = this.cloudinary.uploader.upload_stream(
+          {
+            folder: 'campusconnect/accommodation',
+            resource_type: 'image',
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          },
+        );
+
+        uploadStream.end(file.buffer);
+      });
+
+      imageUrl = result.secure_url;
+    }
+
+    Object.assign(accommodation, updateAccommodationDto);
+
+    if (imageUrl) {
+      accommodation.image = imageUrl;
+    }
+
+    return this.accommodationRepository.save(accommodation);
   }
 
   async remove(
