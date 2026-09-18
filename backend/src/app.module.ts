@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -18,11 +16,6 @@ import { PaymentModule } from './payments/payment.module';
       isGlobal: true,
     }),
 
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
-      serveRoot: '/uploads',
-    }),
-
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST,
@@ -32,13 +25,10 @@ import { PaymentModule } from './payments/payment.module';
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       synchronize: true,
-
-       ssl: {
-    rejectUnauthorized: false,
+      ssl: {
+        rejectUnauthorized: false,
       },
     }),
-
-   
 
     UsersModule,
     AuthModule,

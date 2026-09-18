@@ -6,6 +6,7 @@ import { AccommodationController } from './accommodation.controller';
 import { AccommodationService } from './accommodation.service';
 import { Accommodation } from './accommodation.entity';
 import { User } from '../users/user.entity';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -14,6 +15,8 @@ import { User } from '../users/user.entity';
     PassportModule.register({
       defaultStrategy: 'jwt',
     }),
+
+    CloudinaryModule,
   ],
   controllers: [AccommodationController],
   providers: [AccommodationService],
