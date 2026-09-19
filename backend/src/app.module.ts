@@ -9,14 +9,10 @@ import { AccommodationModule } from './accommodation/accommodation.module';
 import { ServicesModule } from './services/service.module';
 import { StudyGroupsModule } from './study-groups/study-groups.module';
 import { PaymentModule } from './payments/payment.module';
-import { UploadModule } from '../uploads/upload.module';
-import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
 
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -39,8 +35,6 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     ServicesModule,
     StudyGroupsModule,
     PaymentModule,
-    UploadModule,
-    CloudinaryModule,
   ],
 })
 export class AppModule {}

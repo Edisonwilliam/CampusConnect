@@ -3,7 +3,7 @@ import { v2 as cloudinary } from 'cloudinary';
 
 @Injectable()
 export class CloudinaryService {
-  constructor(@Inject('CLOUDINARY') private cloudinaryInstance) {}
+  constructor(@Inject('CLOUDINARY') private cloudinaryInstance: any) {}
 
   async uploadImage(
     file: Express.Multer.File,
@@ -15,10 +15,10 @@ export class CloudinaryService {
           folder: folder,
           resource_type: 'auto',
         },
-        (error, result) => {
+        (error: any, result: any) => {
           if (error) {
             reject(new Error(`Upload failed: ${error.message}`));
-          } else {
+          } else if (result) {
             resolve({
               url: result.secure_url,
               publicId: result.public_id,
@@ -35,7 +35,8 @@ export class CloudinaryService {
     try {
       await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-      throw new Error(`Delete failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Delete failed: ${errorMessage}`);
     }
   }
 }

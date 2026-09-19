@@ -1,9 +1,9 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -54,8 +54,10 @@ export class AccommodationService {
             (error: any, result: any) => {
               if (error) {
                 reject(error);
-              } else {
+              } else if (result) {
                 resolve(result);
+              } else {
+                reject(new Error('Cloudinary returned no result'));
               }
             },
           );
@@ -65,17 +67,25 @@ export class AccommodationService {
 
         imageUrl = result.secure_url;
         imagePublicId = result.public_id;
-      } catch (error) {
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+
         throw new BadRequestException(
-          `Image upload failed: ${error.message}`,
+          `Image upload failed: ${errorMessage}`,
         );
       }
     }
 
     const accommodation = this.accommodationRepository.create({
-      ...createAccommodationDto,
+      title: createAccommodationDto.title,
+      description: createAccommodationDto.description,
+      price: String(createAccommodationDto.price),
+      type: createAccommodationDto.type,
+      location: createAccommodationDto.location,
+      contact: createAccommodationDto.contact,
       image: imageUrl,
-      imagePublicId: imagePublicId,
+      ...(imagePublicId ? { imagePublicId } : {}),
       ownerId: user.id,
       ownerName: `${user.firstName} ${user.lastName}`,
     });
@@ -123,19 +133,19 @@ export class AccommodationService {
 
     if (file) {
       try {
-        // Delete old image first
         if (accommodation.imagePublicId) {
           try {
             await this.cloudinary.uploader.destroy(
               accommodation.imagePublicId,
             );
-          } catch (deleteError) {
-            console.error('Failed to delete old image:', deleteError);
-            // Continue anyway - don't fail the update
+          } catch (deleteError: unknown) {
+            console.error(
+              'Failed to delete old image:',
+              deleteError,
+            );
           }
         }
 
-        // Upload new image
         const result = await new Promise<any>((resolve, reject) => {
           const uploadStream = this.cloudinary.uploader.upload_stream(
             {
@@ -145,8 +155,10 @@ export class AccommodationService {
             (error: any, result: any) => {
               if (error) {
                 reject(error);
-              } else {
+              } else if (result) {
                 resolve(result);
+              } else {
+                reject(new Error('Cloudinary returned no result'));
               }
             },
           );
@@ -156,16 +168,23 @@ export class AccommodationService {
 
         imageUrl = result.secure_url;
         imagePublicId = result.public_id;
-      } catch (error) {
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+
         throw new BadRequestException(
-          `Image upload failed: ${error.message}`,
+          `Image upload failed: ${errorMessage}`,
         );
       }
     }
 
     Object.assign(accommodation, updateAccommodationDto);
 
-    if (imageUrl) {
+    if (updateAccommodationDto.price !== undefined) {
+      accommodation.price = String(updateAccommodationDto.price);
+    }
+
+    if (imageUrl && imagePublicId) {
       accommodation.image = imageUrl;
       accommodation.imagePublicId = imagePublicId;
     }
@@ -182,13 +201,16 @@ export class AccommodationService {
       );
     }
 
-    // Delete image from Cloudinary before deleting the record
     if (accommodation.imagePublicId) {
       try {
-        await this.cloudinary.uploader.destroy(accommodation.imagePublicId);
-      } catch (error) {
-        console.error('Failed to delete image from Cloudinary:', error);
-        // Continue with deletion even if image delete fails
+        await this.cloudinary.uploader.destroy(
+          accommodation.imagePublicId,
+        );
+      } catch (error: unknown) {
+        console.error(
+          'Failed to delete image from Cloudinary:',
+          error,
+        );
       }
     }
 

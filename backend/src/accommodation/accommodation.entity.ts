@@ -13,7 +13,7 @@ export class Accommodation {
   @Column()
   title: string;
 
-  @Column()
+  @Column({ nullable: true })
   description: string;
 
   @Column('decimal', { precision: 12, scale: 2 })
@@ -26,10 +26,10 @@ export class Accommodation {
   location: string;
 
   @Column({ nullable: true })
-  image: string; // Cloudinary URL
+  image: string;
 
   @Column({ nullable: true })
-  imagePublicId: string; // ← Add this column
+  imagePublicId: string;
 
   @Column()
   contact: string;
@@ -43,3 +43,4 @@ export class Accommodation {
   @CreateDateColumn()
   createdAt: Date;
 }
+
