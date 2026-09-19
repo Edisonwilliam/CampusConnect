@@ -23,6 +23,21 @@ type Service = {
   };
 };
 
+const getImageUrl = (image?: string) => {
+  if (!image) {
+    return "/placeholder.jpg";
+  }
+
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://")
+  ) {
+    return image;
+  }
+
+  return `${API_URL}${image}`;
+};
+
 export default function ServiceDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -194,7 +209,7 @@ export default function ServiceDetailsPage() {
           {service.image && (
             <div className="border-b border-gray-100">
               <img
-                src={`${API_URL}${service.image}`}
+                src={getImageUrl(service.image)}
                 alt={service.title}
                 className="h-72 w-full object-cover sm:h-96"
               />
@@ -318,3 +333,6 @@ export default function ServiceDetailsPage() {
     </main>
   );
 }
+
+
+

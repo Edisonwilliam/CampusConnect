@@ -69,9 +69,7 @@ const Accommodation = () => {
             price: Number(item.price),
             type: item.type,
             location: item.location,
-            image: item.image
-              ? `${API_URL}${item.image}`
-              : "/placeholder.jpg",
+            image: getImageUrl(item.image),
             description: item.description,
             contact: item.contact,
             ownerId: item.ownerId,
@@ -212,9 +210,7 @@ const Accommodation = () => {
         price: Number(result.price),
         type: result.type,
         location: result.location,
-        image: result.image
-          ? `${API_URL}${result.image}`
-          : "/placeholder.jpg",
+        image: getImageUrl(result.image),
         description: result.description,
         contact: result.contact,
         ownerId: result.ownerId,

@@ -27,6 +27,19 @@ const accommodationTypes = [
   "Self Contain",
 ];
 
+const getImageUrl = (image?: string) => {
+  if (!image) return "/placeholder.jpg";
+
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://")
+  ) {
+    return image;
+  }
+
+  return `${API_URL}${image}`;
+};
+
 const AccommodationDetails = () => {
   const params = useParams();
   const router = useRouter();
@@ -67,9 +80,7 @@ const AccommodationDetails = () => {
           price: Number(data.price),
           type: data.type,
           location: data.location,
-          image: data.image
-            ? `${API_URL}${data.image}`
-            : "/placeholder.jpg",
+          image: getImageUrl(data.image),
           description: data.description,
           contact: data.contact,
           ownerId: data.ownerId,
@@ -87,7 +98,10 @@ const AccommodationDetails = () => {
           description: accommodationData.description,
         });
       } catch (error) {
-        console.error("Failed to load accommodation:", error);
+        console.error(
+          "Failed to load accommodation:",
+          error
+        );
       } finally {
         setLoading(false);
       }
@@ -160,9 +174,7 @@ const AccommodationDetails = () => {
       setAccommodation({
         ...result,
         price: Number(result.price),
-        image: result.image
-          ? `${API_URL}${result.image}`
-          : "/placeholder.jpg",
+        image: getImageUrl(result.image),
       });
 
       setShowEditForm(false);

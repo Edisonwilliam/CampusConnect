@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
 import { getListings } from ".././lib/api";
-import Image from "next/image";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -27,6 +26,21 @@ const categories = [
   "Gaming",
   "Others",
 ];
+
+const getImageUrl = (image?: string) => {
+  if (!image) {
+    return "/placeholder.jpg";
+  }
+
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://")
+  ) {
+    return image;
+  }
+
+  return `${API_URL}${image}`;
+};
 
 const Marketplace = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -62,9 +76,7 @@ const Marketplace = () => {
             condition: listing.condition,
             location: listing.location,
             description: listing.description,
-            image: listing.image
-              ? `${API_URL}${listing.image}`
-              : "/placeholder.jpg",
+            image: getImageUrl(listing.image),
           })
         );
 
@@ -206,9 +218,7 @@ const Marketplace = () => {
         condition: result.condition,
         location: result.location,
         description: result.description,
-        image: result.image
-          ? `${API_URL}${result.image}`
-          : "/placeholder.jpg",
+        image: getImageUrl(result.image),
       };
 
       setProducts((prev) => [newProduct, ...prev]);
@@ -242,7 +252,6 @@ const Marketplace = () => {
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8 md:px-8 lg:px-16">
       <div className="mx-auto max-w-7xl">
-
         <section className="mb-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
@@ -308,7 +317,10 @@ const Marketplace = () => {
 
             <p className="mt-1 text-sm text-gray-500">
               {filteredProducts.length}{" "}
-              {filteredProducts.length === 1 ? "item" : "items"} available
+              {filteredProducts.length === 1
+                ? "item"
+                : "items"}{" "}
+              available
             </p>
           </div>
 
@@ -352,7 +364,6 @@ const Marketplace = () => {
       {showSellForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
-
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -365,6 +376,7 @@ const Marketplace = () => {
               </div>
 
               <button
+                type="button"
                 onClick={() => setShowSellForm(false)}
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200"
               >
@@ -372,8 +384,10 @@ const Marketplace = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+            >
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Item Name
@@ -420,9 +434,14 @@ const Marketplace = () => {
                     className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-black"
                   >
                     {categories
-                      .filter((category) => category !== "All")
+                      .filter(
+                        (category) => category !== "All"
+                      )
                       .map((category) => (
-                        <option key={category} value={category}>
+                        <option
+                          key={category}
+                          value={category}
+                        >
                           {category}
                         </option>
                       ))}
@@ -441,7 +460,9 @@ const Marketplace = () => {
                     className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-black"
                   >
                     <option value="New">New</option>
-                    <option value="Like New">Like New</option>
+                    <option value="Like New">
+                      Like New
+                    </option>
                     <option value="Good">Good</option>
                     <option value="Fair">Fair</option>
                   </select>
@@ -493,9 +514,9 @@ const Marketplace = () => {
                 ) : (
                   <div className="relative overflow-hidden rounded-xl border border-gray-200">
                     <img
-                    src={imagePreview}
-                    alt="Selected item"
-                    className="h-64 w-full object-cover"
+                      src={imagePreview}
+                      alt="Selected item"
+                      className="h-64 w-full object-cover"
                     />
 
                     <button
@@ -541,7 +562,6 @@ const Marketplace = () => {
                   Add Item
                 </button>
               </div>
-
             </form>
           </div>
         </div>

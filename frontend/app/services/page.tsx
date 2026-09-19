@@ -32,6 +32,21 @@ const categories = [
   "Education",
 ];
 
+const getImageUrl = (image?: string) => {
+  if (!image) {
+    return "/placeholder.jpg";
+  }
+
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://")
+  ) {
+    return image;
+  }
+
+  return `${API_URL}${image}`;
+};
+
 const ServicesPage = () => {
   const { token, isAuthenticated, user } = useAuth();
 
@@ -65,7 +80,9 @@ const ServicesPage = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch services: ${response.status}`);
+          throw new Error(
+            `Failed to fetch services: ${response.status}`
+          );
         }
 
         const data = await response.json();
@@ -569,7 +586,7 @@ const ServicesPage = () => {
                 >
                   {service.image && (
                     <img
-                      src={`${API_URL}${service.image}`}
+                      src={getImageUrl(service.image)}
                       alt={service.title}
                       className="h-48 w-full object-cover"
                     />
