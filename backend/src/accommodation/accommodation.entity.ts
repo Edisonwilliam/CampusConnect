@@ -1,8 +1,8 @@
 import {
-  Column,
-  CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
 } from 'typeorm';
 
 @Entity('accommodations')
@@ -13,11 +13,11 @@ export class Accommodation {
   @Column()
   title: string;
 
-  @Column('text')
+  @Column()
   description: string;
 
   @Column('decimal', { precision: 12, scale: 2 })
-  price: number;
+  price: string;
 
   @Column()
   type: string;
@@ -26,7 +26,10 @@ export class Accommodation {
   location: string;
 
   @Column({ nullable: true })
-  image?: string;
+  image: string; // Cloudinary URL
+
+  @Column({ nullable: true })
+  imagePublicId: string; // ← Add this column
 
   @Column()
   contact: string;

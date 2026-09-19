@@ -47,7 +47,7 @@ export class ServicesService {
             folder: 'campusconnect/services',
             resource_type: 'image',
           },
-          (error, result) => {
+           (error: any, result: any) => {
             if (error) {
               reject(error);
             } else {
@@ -122,7 +122,7 @@ export class ServicesService {
             folder: 'campusconnect/services',
             resource_type: 'image',
           },
-          (error, result) => {
+          (error: any, result: any) => {
             if (error) {
               reject(error);
             } else {

@@ -57,7 +57,7 @@ export class AccommodationController {
       },
     }),
   )
-  create(
+  async create(
     @Body() createAccommodationDto: CreateAccommodationDto,
     @UploadedFile() file: Express.Multer.File,
     @Request() req: any,
@@ -91,7 +91,7 @@ export class AccommodationController {
       },
     }),
   )
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateAccommodationDto: UpdateAccommodationDto,
     @UploadedFile() file: Express.Multer.File,

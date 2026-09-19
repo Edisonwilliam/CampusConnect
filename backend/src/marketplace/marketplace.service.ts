@@ -46,7 +46,7 @@ export class MarketplaceService {
             folder: 'campusconnect/marketplace',
             resource_type: 'image',
           },
-          (error, result) => {
+           (error: any, result: any) => {
             if (error) {
               reject(error);
             } else {

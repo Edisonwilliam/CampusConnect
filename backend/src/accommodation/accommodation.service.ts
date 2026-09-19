@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -40,32 +41,41 @@ export class AccommodationService {
     }
 
     let imageUrl: string | undefined;
+    let imagePublicId: string | undefined;
 
     if (file) {
-      const result = await new Promise<any>((resolve, reject) => {
-        const uploadStream = this.cloudinary.uploader.upload_stream(
-          {
-            folder: 'campusconnect/accommodation',
-            resource_type: 'image',
-          },
-          (error, result) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          },
+      try {
+        const result = await new Promise<any>((resolve, reject) => {
+          const uploadStream = this.cloudinary.uploader.upload_stream(
+            {
+              folder: 'campusconnect/accommodation',
+              resource_type: 'image',
+            },
+            (error: any, result: any) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(result);
+              }
+            },
+          );
+
+          uploadStream.end(file.buffer);
+        });
+
+        imageUrl = result.secure_url;
+        imagePublicId = result.public_id;
+      } catch (error) {
+        throw new BadRequestException(
+          `Image upload failed: ${error.message}`,
         );
-
-        uploadStream.end(file.buffer);
-      });
-
-      imageUrl = result.secure_url;
+      }
     }
 
     const accommodation = this.accommodationRepository.create({
       ...createAccommodationDto,
       image: imageUrl,
+      imagePublicId: imagePublicId,
       ownerId: user.id,
       ownerName: `${user.firstName} ${user.lastName}`,
     });
@@ -82,10 +92,9 @@ export class AccommodationService {
   }
 
   async findOne(id: number) {
-    const accommodation =
-      await this.accommodationRepository.findOneBy({
-        id,
-      });
+    const accommodation = await this.accommodationRepository.findOneBy({
+      id,
+    });
 
     if (!accommodation) {
       throw new NotFoundException('Accommodation not found');
@@ -103,62 +112,84 @@ export class AccommodationService {
   ) {
     const accommodation = await this.findOne(id);
 
-    if (
-      role !== 'admin' &&
-      accommodation.ownerId !== userId
-    ) {
+    if (role !== 'admin' && accommodation.ownerId !== userId) {
       throw new ForbiddenException(
         'You do not have permission to update this listing',
       );
     }
 
     let imageUrl: string | undefined;
+    let imagePublicId: string | undefined;
 
     if (file) {
-      const result = await new Promise<any>((resolve, reject) => {
-        const uploadStream = this.cloudinary.uploader.upload_stream(
-          {
-            folder: 'campusconnect/accommodation',
-            resource_type: 'image',
-          },
-          (error, result) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          },
+      try {
+        // Delete old image first
+        if (accommodation.imagePublicId) {
+          try {
+            await this.cloudinary.uploader.destroy(
+              accommodation.imagePublicId,
+            );
+          } catch (deleteError) {
+            console.error('Failed to delete old image:', deleteError);
+            // Continue anyway - don't fail the update
+          }
+        }
+
+        // Upload new image
+        const result = await new Promise<any>((resolve, reject) => {
+          const uploadStream = this.cloudinary.uploader.upload_stream(
+            {
+              folder: 'campusconnect/accommodation',
+              resource_type: 'image',
+            },
+            (error: any, result: any) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(result);
+              }
+            },
+          );
+
+          uploadStream.end(file.buffer);
+        });
+
+        imageUrl = result.secure_url;
+        imagePublicId = result.public_id;
+      } catch (error) {
+        throw new BadRequestException(
+          `Image upload failed: ${error.message}`,
         );
-
-        uploadStream.end(file.buffer);
-      });
-
-      imageUrl = result.secure_url;
+      }
     }
 
     Object.assign(accommodation, updateAccommodationDto);
 
     if (imageUrl) {
       accommodation.image = imageUrl;
+      accommodation.imagePublicId = imagePublicId;
     }
 
     return this.accommodationRepository.save(accommodation);
   }
 
-  async remove(
-    id: number,
-    userId: number,
-    role: string,
-  ) {
+  async remove(id: number, userId: number, role: string) {
     const accommodation = await this.findOne(id);
 
-    if (
-      role !== 'admin' &&
-      accommodation.ownerId !== userId
-    ) {
+    if (role !== 'admin' && accommodation.ownerId !== userId) {
       throw new ForbiddenException(
         'You do not have permission to delete this listing',
       );
+    }
+
+    // Delete image from Cloudinary before deleting the record
+    if (accommodation.imagePublicId) {
+      try {
+        await this.cloudinary.uploader.destroy(accommodation.imagePublicId);
+      } catch (error) {
+        console.error('Failed to delete image from Cloudinary:', error);
+        // Continue with deletion even if image delete fails
+      }
     }
 
     await this.accommodationRepository.delete(id);
