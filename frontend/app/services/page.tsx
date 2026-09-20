@@ -32,7 +32,6 @@ const categories = [
   "Education",
 ];
 
-
 const ServicesPage = () => {
   const { token, isAuthenticated, user } = useAuth();
 
@@ -117,11 +116,13 @@ const ServicesPage = () => {
 
     if (!file.type.startsWith("image/")) {
       alert("Please select an image file.");
+      e.target.value = "";
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
       alert("Image size must be less than 5MB.");
+      e.target.value = "";
       return;
     }
 
@@ -570,13 +571,16 @@ const ServicesPage = () => {
                   key={service.id}
                   className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                 >
-                  {service.image && (
+                  <div className="h-56 w-full bg-gray-100">
                     <img
-                      src={service.image || "/placeholder.jpg"}
+                      src={
+                        service.image ||
+                        "/placeholder.jpg"
+                      }
                       alt={service.title}
                       className="h-full w-full object-cover"
                     />
-                  )}
+                  </div>
 
                   <div className="p-6">
                     <div className="mb-4 flex items-center justify-between gap-3">

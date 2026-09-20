@@ -23,7 +23,6 @@ type Service = {
   };
 };
 
-
 export default function ServiceDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -175,7 +174,8 @@ export default function ServiceDetailsPage() {
 
   const provider = `${service.user.firstName} ${service.user.lastName}`;
 
-  const isOwner = user?.id === service.user.id;
+  const isOwner =
+    Number(user?.id) === Number(service.user.id);
 
   const isAdmin = user?.role === "admin";
 
@@ -192,15 +192,13 @@ export default function ServiceDetailsPage() {
         </Link>
 
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          {service.image && (
-            <div className="border-b border-gray-100">
-              <img
-                src={service.image || "/placeholder.jpg"}
-                alt={service.title}
-                className="h-72 w-full object-cover sm:h-96"
-              />
-            </div>
-          )}
+          <div className="border-b border-gray-100 bg-gray-100">
+            <img
+              src={service.image || "/placeholder.jpg"}
+              alt={service.title}
+              className="h-72 w-full object-cover sm:h-96"
+            />
+          </div>
 
           <div className="border-b border-gray-100 p-6 sm:p-8">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -319,6 +317,3 @@ export default function ServiceDetailsPage() {
     </main>
   );
 }
-
-
-
