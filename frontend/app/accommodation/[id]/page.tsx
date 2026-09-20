@@ -22,21 +22,6 @@ interface Accommodation {
   createdAt?: string;
 }
 
-const getImageUrl = (image?: string) => {
-  if (!image) {
-    return "/placeholder.jpg";
-  }
-
-  if (
-    image.startsWith("http://") ||
-    image.startsWith("https://")
-  ) {
-    return image;
-  }
-
-  return `${API_URL}${image}`;
-};
-
 export default function AccommodationDetails() {
   const params = useParams();
   const router = useRouter();
@@ -85,7 +70,7 @@ export default function AccommodationDetails() {
         const formattedAccommodation: Accommodation = {
           ...data,
           price: Number(data.price),
-          image: getImageUrl(data.image),
+          image: data.image,
         };
 
         setAccommodation(formattedAccommodation);
@@ -204,7 +189,7 @@ export default function AccommodationDetails() {
       const updatedAccommodation: Accommodation = {
         ...result,
         price: Number(result.price),
-        image: getImageUrl(result.image),
+        image: result.image,
       };
 
       setAccommodation(updatedAccommodation);
@@ -322,7 +307,7 @@ export default function AccommodationDetails() {
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="h-[350px] md:h-[500px] bg-gray-100">
               <img
-                src={getImageUrl(accommodation.image)}
+                src={accommodation.image || "/placeholder.jpg"}
                 alt={accommodation.title}
                 className="h-full w-full object-cover"
               />

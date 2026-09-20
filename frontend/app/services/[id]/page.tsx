@@ -23,20 +23,6 @@ type Service = {
   };
 };
 
-const getImageUrl = (image?: string) => {
-  if (!image) {
-    return "/placeholder.jpg";
-  }
-
-  if (
-    image.startsWith("http://") ||
-    image.startsWith("https://")
-  ) {
-    return image;
-  }
-
-  return src={getImageUrl(image)};
-};
 
 export default function ServiceDetailsPage() {
   const params = useParams();
@@ -209,7 +195,7 @@ export default function ServiceDetailsPage() {
           {service.image && (
             <div className="border-b border-gray-100">
               <img
-                src={getImageUrl(service.image)}
+                src={service.image || "/placeholder.jpg"}
                 alt={service.title}
                 className="h-72 w-full object-cover sm:h-96"
               />

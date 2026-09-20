@@ -32,20 +32,6 @@ const categories = [
   "Education",
 ];
 
-const getImageUrl = (image?: string) => {
-  if (!image) {
-    return "/placeholder.jpg";
-  }
-
-  if (
-    image.startsWith("http://") ||
-    image.startsWith("https://")
-  ) {
-    return image;
-  }
-
-  return src={getImageUrl(image)};
-};
 
 const ServicesPage = () => {
   const { token, isAuthenticated, user } = useAuth();
@@ -586,9 +572,9 @@ const ServicesPage = () => {
                 >
                   {service.image && (
                     <img
-                      src={getImageUrl(service.image)}
+                      src={service.image || "/placeholder.jpg"}
                       alt={service.title}
-                      className="h-48 w-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   )}
 

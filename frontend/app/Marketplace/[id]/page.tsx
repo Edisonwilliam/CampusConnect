@@ -21,20 +21,6 @@ description: string;
 sellerId: number;
 };
 
-const getImageUrl = (image?: string) => {
-if (!image) {
-return "/placeholder.jpg";
-}
-
-if (
-image.startsWith("http://") ||
-image.startsWith("https://")
-) {
-return image;
-}
-
-return src={getImageUrl(image)};
-};
 
 const ProductDetails = () => {
 const params = useParams();
@@ -82,7 +68,7 @@ const response = await fetch(
       location: data.location,
       description: data.description,
       sellerId: data.sellerId,
-      image: getImageUrl(data.image),
+      image: data.image || "/placeholder.jpg",
     };
 
     setProduct(formattedProduct);
@@ -208,7 +194,7 @@ try {
     condition: data.condition,
     location: data.location,
     description: data.description,
-    image: getImageUrl(data.image),
+    image: data.image || "/placeholder.jpg",
   });
 
   setEditing(false);
