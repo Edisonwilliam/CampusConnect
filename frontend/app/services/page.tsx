@@ -44,7 +44,7 @@ const getImageUrl = (image?: string) => {
     return image;
   }
 
-  return `${API_URL}${image}`;
+  return src={getImageUrl(image)};
 };
 
 const ServicesPage = () => {

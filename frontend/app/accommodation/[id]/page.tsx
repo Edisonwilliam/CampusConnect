@@ -1,34 +1,31 @@
 "use client";
 
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "../../components/AuthProvider";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://campusconnect-qgah.onrender.com";
 
-type Accommodation = {
+interface Accommodation {
   id: number;
   title: string;
+  description: string;
   price: number;
   type: string;
   location: string;
   image?: string;
-  description: string;
   contact: string;
   ownerId: number;
   ownerName: string;
-};
-
-const accommodationTypes = [
-  "Hostel",
-  "Apartment",
-  "Room",
-  "Self Contain",
-];
+  createdAt?: string;
+}
 
 const getImageUrl = (image?: string) => {
-  if (!image) return "/placeholder.jpg";
+  if (!image) {
+    return "/placeholder.jpg";
+  }
 
   if (
     image.startsWith("http://") ||
@@ -40,174 +37,223 @@ const getImageUrl = (image?: string) => {
   return `${API_URL}${image}`;
 };
 
-const AccommodationDetails = () => {
+export default function AccommodationDetails() {
   const params = useParams();
   const router = useRouter();
-  const { token, user } = useAuth();
+  const { user } = useAuth();
 
   const [accommodation, setAccommodation] =
     useState<Accommodation | null>(null);
 
   const [loading, setLoading] = useState(true);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState("");
+
+  const [showEdit, setShowEdit] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
+    description: "",
     price: "",
-    type: "Hostel",
+    type: "",
     location: "",
     contact: "",
-    description: "",
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  const accommodationId = params?.id;
+
   useEffect(() => {
-    const loadAccommodation = async () => {
+    if (!accommodationId) return;
+
+    const fetchAccommodation = async () => {
       try {
+        setLoading(true);
+        setError("");
+
         const response = await fetch(
-          `${API_URL}/accommodation/${params.id}`
+          `${API_URL}/accommodation/${accommodationId}`
         );
 
         if (!response.ok) {
-          throw new Error("Accommodation not found");
+          throw new Error("Failed to fetch accommodation");
         }
 
         const data = await response.json();
 
-        const accommodationData: Accommodation = {
-          id: data.id,
-          title: data.title,
+        const formattedAccommodation: Accommodation = {
+          ...data,
           price: Number(data.price),
-          type: data.type,
-          location: data.location,
           image: getImageUrl(data.image),
-          description: data.description,
-          contact: data.contact,
-          ownerId: data.ownerId,
-          ownerName: data.ownerName,
         };
 
-        setAccommodation(accommodationData);
+        setAccommodation(formattedAccommodation);
 
         setFormData({
-          title: accommodationData.title,
-          price: String(accommodationData.price),
-          type: accommodationData.type,
-          location: accommodationData.location,
-          contact: accommodationData.contact,
-          description: accommodationData.description,
+          title: data.title || "",
+          description: data.description || "",
+          price: data.price?.toString() || "",
+          type: data.type || "",
+          location: data.location || "",
+          contact: data.contact || "",
         });
-      } catch (error) {
-        console.error(
-          "Failed to load accommodation:",
-          error
-        );
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load accommodation");
       } finally {
         setLoading(false);
       }
     };
 
-    if (params.id) {
-      loadAccommodation();
-    }
-  }, [params.id]);
+    fetchAccommodation();
+  }, [accommodationId]);
 
-  const isOwner =
-    user?.id === accommodation?.ownerId;
+  const canManageAccommodation =
+    user &&
+    accommodation &&
+    (user.role === "admin" ||
+      Number(user.id) === Number(accommodation.ownerId));
 
-  const isAdmin =
-    user?.role === "admin";
-
-  const canManage =
-    isOwner || isAdmin;
-
-  const handleChange = (
+  const handleInputChange = (
     e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  };
+
+  const handleImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      setImageFile(null);
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be less than 5MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setImageFile(file);
   };
 
   const handleUpdate = async (
-    e: React.FormEvent
+    e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
 
+    if (!accommodation) return;
+
+    const token = localStorage.getItem("access_token");
+
     if (!token) {
-      alert("Please log in.");
+      alert("Please log in first.");
       return;
     }
 
     try {
+      setUpdating(true);
+
+      const form = new FormData();
+
+      form.append("title", formData.title);
+      form.append("description", formData.description);
+      form.append("price", formData.price);
+      form.append("type", formData.type);
+      form.append("location", formData.location);
+      form.append("contact", formData.contact);
+
+      if (imageFile) {
+        form.append("image", imageFile);
+      }
+
       const response = await fetch(
-        `${API_URL}/accommodation/${params.id}`,
+        `${API_URL}/accommodation/${accommodation.id}`,
         {
           method: "PATCH",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            title: formData.title,
-            price: Number(formData.price),
-            type: formData.type,
-            location: formData.location,
-            contact: formData.contact,
-            description: formData.description,
-          }),
+          body: form,
         }
       );
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(
-          result.message ||
-            "Failed to update accommodation"
-        );
+        const message = await response.text();
+        throw new Error(message || "Failed to update accommodation");
       }
 
-      setAccommodation({
+      const result = await response.json();
+
+      const updatedAccommodation: Accommodation = {
         ...result,
         price: Number(result.price),
         image: getImageUrl(result.image),
+      };
+
+      setAccommodation(updatedAccommodation);
+
+      setFormData({
+        title: result.title || "",
+        description: result.description || "",
+        price: result.price?.toString() || "",
+        type: result.type || "",
+        location: result.location || "",
+        contact: result.contact || "",
       });
 
-      setShowEditForm(false);
+      setImageFile(null);
+      setShowEdit(false);
 
       alert("Accommodation updated successfully.");
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
 
       alert(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong"
+        err instanceof Error
+          ? err.message
+          : "Failed to update accommodation."
       );
+    } finally {
+      setUpdating(false);
     }
   };
 
   const handleDelete = async () => {
+    if (!accommodation) return;
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this accommodation?"
     );
 
     if (!confirmed) return;
 
+    const token = localStorage.getItem("access_token");
+
     if (!token) {
-      alert("Please log in.");
+      alert("Please log in first.");
       return;
     }
 
     try {
-      setDeleting(true);
-
       const response = await fetch(
-        `${API_URL}/accommodation/${params.id}`,
+        `${API_URL}/accommodation/${accommodation.id}`,
         {
           method: "DELETE",
           headers: {
@@ -216,255 +262,251 @@ const AccommodationDetails = () => {
         }
       );
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(
-          result.message ||
-            "Failed to delete accommodation"
-        );
+        const message = await response.text();
+        throw new Error(message || "Failed to delete accommodation");
       }
 
       alert("Accommodation deleted successfully.");
 
       router.push("/accommodation");
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
 
       alert(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong"
+        err instanceof Error
+          ? err.message
+          : "Failed to delete accommodation."
       );
-    } finally {
-      setDeleting(false);
     }
   };
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <p className="text-gray-500">
+      <main className="min-h-screen flex items-center justify-center px-6">
+        <p className="text-gray-600">
           Loading accommodation...
         </p>
       </main>
     );
   }
 
-  if (!accommodation) {
+  if (error || !accommodation) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Accommodation not found
-          </h1>
+      <main className="min-h-screen flex flex-col items-center justify-center px-6">
+        <p className="text-red-600 mb-4">
+          {error || "Accommodation not found."}
+        </p>
 
-          <Link
-            href="/accommodation"
-            className="mt-5 inline-block rounded-xl bg-black px-6 py-3 font-medium text-white"
-          >
-            Back to Accommodation
-          </Link>
-        </div>
+        <button
+          onClick={() => router.push("/accommodation")}
+          className="px-5 py-2 bg-black text-white rounded-lg"
+        >
+          Back to Accommodation
+        </button>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8 md:px-8 lg:px-16">
-      <div className="mx-auto max-w-6xl">
-
-        <Link
-          href="/accommodation"
-          className="mb-6 inline-block text-sm font-medium text-gray-600 hover:text-black"
+    <main className="min-h-screen bg-gray-50 px-4 py-8">
+      <div className="max-w-5xl mx-auto">
+        <button
+          onClick={() => router.push("/accommodation")}
+          className="mb-6 text-sm text-gray-600 hover:text-black"
         >
           ← Back to Accommodation
-        </Link>
+        </button>
 
-        <div className="grid overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:grid-cols-2">
-
-          <div className="relative h-[350px] md:h-[550px]">
-            <img
-              src={accommodation.image}
-              alt={accommodation.title}
-              className="h-full w-full object-cover"
-            />
-          </div>
-
-          <div className="flex flex-col p-6 md:p-10">
-
-            <div className="flex items-center justify-between">
-              <span className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600">
-                {accommodation.type}
-              </span>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="h-[350px] md:h-[500px] bg-gray-100">
+              <img
+                src={getImageUrl(accommodation.image)}
+                alt={accommodation.title}
+                className="h-full w-full object-cover"
+              />
             </div>
 
-            <h1 className="mt-6 text-3xl font-bold text-gray-900 md:text-4xl">
-              {accommodation.title}
-            </h1>
+            <div className="p-6 md:p-8">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                    {accommodation.title}
+                  </h1>
 
-            <p className="mt-4 text-3xl font-bold text-gray-900">
-              ₦{accommodation.price.toLocaleString()}
-              <span className="text-base font-normal text-gray-500">
-                {" "}
-                / year
-              </span>
-            </p>
-
-            <div className="mt-8 border-t border-gray-100 pt-6">
-              <p className="text-sm font-medium text-gray-500">
-                Location
-              </p>
-
-              <p className="mt-2 text-gray-900">
-                📍 {accommodation.location}
-              </p>
-            </div>
-
-            <div className="mt-6 border-t border-gray-100 pt-6">
-              <p className="text-sm font-medium text-gray-500">
-                Description
-              </p>
-
-              <p className="mt-2 leading-7 text-gray-600">
-                {accommodation.description}
-              </p>
-            </div>
-
-            <div className="mt-6 border-t border-gray-100 pt-6">
-              <p className="text-sm font-medium text-gray-500">
-                Listed by
-              </p>
-
-              <p className="mt-2 text-gray-900">
-                {accommodation.ownerName}
-              </p>
-            </div>
-
-            {canManage ? (
-              <div className="mt-8 flex gap-3">
-
-                <button
-                  onClick={() => setShowEditForm(true)}
-                  className="flex-1 rounded-xl border border-gray-200 py-4 font-medium text-gray-700 transition hover:bg-gray-100"
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="flex-1 rounded-xl bg-red-600 py-4 font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {deleting
-                    ? "Deleting..."
-                    : "Delete"}
-                </button>
-
+                  <p className="text-gray-500 mt-2">
+                    {accommodation.type}
+                  </p>
+                </div>
               </div>
-            ) : (
-              <a
-                href={`tel:${accommodation.contact}`}
-                className="mt-auto w-full rounded-xl bg-black py-4 text-center font-medium text-white transition hover:bg-gray-800"
-              >
-                Contact Owner
-              </a>
-            )}
 
+              <p className="text-2xl font-bold text-green-600 mb-6">
+                ₦{Number(accommodation.price).toLocaleString()}
+              </p>
+
+              <div className="space-y-4 text-gray-700">
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    Location
+                  </p>
+
+                  <p>{accommodation.location}</p>
+                </div>
+
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    Description
+                  </p>
+
+                  <p className="whitespace-pre-wrap">
+                    {accommodation.description ||
+                      "No description provided."}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    Contact
+                  </p>
+
+                  <p>{accommodation.contact}</p>
+                </div>
+
+                <div>
+                  <p className="font-semibold text-gray-900">
+                    Listed by
+                  </p>
+
+                  <p>{accommodation.ownerName}</p>
+                </div>
+              </div>
+
+              {canManageAccommodation && (
+                <div className="flex flex-wrap gap-3 mt-8">
+                  <button
+                    onClick={() => setShowEdit(true)}
+                    className="px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={handleDelete}
+                    className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {showEditForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
-
-            <div className="mb-6 flex items-center justify-between">
-
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Edit Accommodation
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Update your accommodation details.
-                </p>
-              </div>
+      {showEdit && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4 py-8">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">
+                Edit Accommodation
+              </h2>
 
               <button
-                onClick={() =>
-                  setShowEditForm(false)
-                }
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200"
+                type="button"
+                onClick={() => setShowEdit(false)}
+                className="text-gray-500 hover:text-black text-2xl"
               >
-                ✕
+                ×
               </button>
-
             </div>
 
             <form
               onSubmit={handleUpdate}
               className="space-y-5"
             >
-
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Accommodation Name
+                <label className="block text-sm font-medium mb-2">
+                  Title
                 </label>
 
                 <input
                   type="text"
                   name="title"
                   value={formData.title}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   required
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-black"
+                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Price Per Year
+                <label className="block text-sm font-medium mb-2">
+                  Description
+                </label>
+
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={5}
+                  required
+                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Price
                 </label>
 
                 <input
                   type="number"
                   name="price"
                   value={formData.price}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   min="0"
                   required
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-black"
+                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Accommodation Type
+                <label className="block text-sm font-medium mb-2">
+                  Type
                 </label>
 
                 <select
                   name="type"
                   value={formData.type}
-                  onChange={handleChange}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-black"
+                  onChange={handleInputChange}
+                  required
+                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 >
-                  {accommodationTypes.map(
-                    (type) => (
-                      <option
-                        key={type}
-                        value={type}
-                      >
-                        {type}
-                      </option>
-                    )
-                  )}
+                  <option value="">Select type</option>
+                  <option value="Apartment">
+                    Apartment
+                  </option>
+                  <option value="Self Contain">
+                    Self Contain
+                  </option>
+                  <option value="Room">
+                    Room
+                  </option>
+                  <option value="Flat">
+                    Flat
+                  </option>
+                  <option value="Hostel">
+                    Hostel
+                  </option>
+                  <option value="Other">
+                    Other
+                  </option>
                 </select>
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium mb-2">
                   Location
                 </label>
 
@@ -472,69 +514,68 @@ const AccommodationDetails = () => {
                   type="text"
                   name="location"
                   value={formData.location}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   required
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-black"
+                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Contact Number
+                <label className="block text-sm font-medium mb-2">
+                  Contact
                 </label>
 
                 <input
-                  type="tel"
+                  type="text"
                   name="contact"
                   value={formData.contact}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   required
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-black"
+                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Description
+                <label className="block text-sm font-medium mb-2">
+                  Replace Image
                 </label>
 
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={4}
-                  required
-                  className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-black"
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full"
                 />
+
+                <p className="text-xs text-gray-500 mt-2">
+                  Maximum file size: 5MB
+                </p>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3">
-
+              <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowEditForm(false)
-                  }
-                  className="rounded-xl border border-gray-200 px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-100"
+                  onClick={() => setShowEdit(false)}
+                  className="px-5 py-2 border rounded-lg hover:bg-gray-50"
+                  disabled={updating}
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="rounded-xl bg-black px-6 py-3 font-medium text-white transition hover:bg-gray-800"
+                  disabled={updating}
+                  className="px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
                 >
-                  Save Changes
+                  {updating
+                    ? "Updating..."
+                    : "Update Accommodation"}
                 </button>
-
               </div>
-
             </form>
           </div>
         </div>
       )}
     </main>
   );
-};
-
-export default AccommodationDetails;
+}

@@ -33,7 +33,7 @@ image.startsWith("https://")
 return image;
 }
 
-return `${API_URL}${image}`;
+return src={getImageUrl(image)};
 };
 
 const ProductDetails = () => {
