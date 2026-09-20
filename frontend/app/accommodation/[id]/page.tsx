@@ -181,7 +181,9 @@ export default function AccommodationDetails() {
 
       if (!response.ok) {
         const message = await response.text();
-        throw new Error(message || "Failed to update accommodation");
+        throw new Error(
+          message || "Failed to update accommodation"
+        );
       }
 
       const result = await response.json();
@@ -249,7 +251,10 @@ export default function AccommodationDetails() {
 
       if (!response.ok) {
         const message = await response.text();
-        throw new Error(message || "Failed to delete accommodation");
+
+        throw new Error(
+          message || "Failed to delete accommodation"
+        );
       }
 
       alert("Accommodation deleted successfully.");
@@ -268,7 +273,7 @@ export default function AccommodationDetails() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-6">
+      <main className="flex min-h-screen items-center justify-center px-6">
         <p className="text-gray-600">
           Loading accommodation...
         </p>
@@ -278,14 +283,14 @@ export default function AccommodationDetails() {
 
   if (error || !accommodation) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center px-6">
-        <p className="text-red-600 mb-4">
+      <main className="flex min-h-screen flex-col items-center justify-center px-6">
+        <p className="mb-4 text-red-600">
           {error || "Accommodation not found."}
         </p>
 
         <button
           onClick={() => router.push("/accommodation")}
-          className="px-5 py-2 bg-black text-white rounded-lg"
+          className="rounded-lg bg-black px-5 py-2 text-white"
         >
           Back to Accommodation
         </button>
@@ -295,7 +300,7 @@ export default function AccommodationDetails() {
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="mx-auto max-w-5xl">
         <button
           onClick={() => router.push("/accommodation")}
           className="mb-6 text-sm text-gray-600 hover:text-black"
@@ -303,31 +308,37 @@ export default function AccommodationDetails() {
           ← Back to Accommodation
         </button>
 
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="h-[350px] md:h-[500px] bg-gray-100">
+            <div className="h-[350px] bg-gray-100 md:h-[500px]">
               <img
-                src={accommodation.image || "/placeholder.jpg"}
+                src={
+                  accommodation.image ||
+                  "/placeholder.jpg"
+                }
                 alt={accommodation.title}
                 className="h-full w-full object-cover"
               />
             </div>
 
             <div className="p-6 md:p-8">
-              <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">
                     {accommodation.title}
                   </h1>
 
-                  <p className="text-gray-500 mt-2">
+                  <p className="mt-2 text-gray-500">
                     {accommodation.type}
                   </p>
                 </div>
               </div>
 
-              <p className="text-2xl font-bold text-green-600 mb-6">
-                ₦{Number(accommodation.price).toLocaleString()}
+              <p className="mb-6 text-2xl font-bold text-green-600">
+                ₦
+                {Number(
+                  accommodation.price
+                ).toLocaleString()}
               </p>
 
               <div className="space-y-4 text-gray-700">
@@ -335,7 +346,6 @@ export default function AccommodationDetails() {
                   <p className="font-semibold text-gray-900">
                     Location
                   </p>
-
                   <p>{accommodation.location}</p>
                 </div>
 
@@ -368,17 +378,17 @@ export default function AccommodationDetails() {
               </div>
 
               {canManageAccommodation && (
-                <div className="flex flex-wrap gap-3 mt-8">
+                <div className="mt-8 flex flex-wrap gap-3">
                   <button
                     onClick={() => setShowEdit(true)}
-                    className="px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+                    className="rounded-lg bg-black px-5 py-2 text-white hover:bg-gray-800"
                   >
                     Edit
                   </button>
 
                   <button
                     onClick={handleDelete}
-                    className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    className="rounded-lg bg-red-600 px-5 py-2 text-white hover:bg-red-700"
                   >
                     Delete
                   </button>
@@ -390,9 +400,9 @@ export default function AccommodationDetails() {
       </div>
 
       {showEdit && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4 py-8">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex items-center justify-between mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6">
+            <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold">
                 Edit Accommodation
               </h2>
@@ -400,7 +410,7 @@ export default function AccommodationDetails() {
               <button
                 type="button"
                 onClick={() => setShowEdit(false)}
-                className="text-gray-500 hover:text-black text-2xl"
+                className="text-2xl text-gray-500 hover:text-black"
               >
                 ×
               </button>
@@ -411,7 +421,7 @@ export default function AccommodationDetails() {
               className="space-y-5"
             >
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="mb-2 block text-sm font-medium">
                   Title
                 </label>
 
@@ -421,12 +431,12 @@ export default function AccommodationDetails() {
                   value={formData.title}
                   onChange={handleInputChange}
                   required
-                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+                  className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="mb-2 block text-sm font-medium">
                   Description
                 </label>
 
@@ -436,12 +446,12 @@ export default function AccommodationDetails() {
                   onChange={handleInputChange}
                   rows={5}
                   required
-                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+                  className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="mb-2 block text-sm font-medium">
                   Price
                 </label>
 
@@ -452,12 +462,12 @@ export default function AccommodationDetails() {
                   onChange={handleInputChange}
                   min="0"
                   required
-                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+                  className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="mb-2 block text-sm font-medium">
                   Type
                 </label>
 
@@ -466,9 +476,11 @@ export default function AccommodationDetails() {
                   value={formData.type}
                   onChange={handleInputChange}
                   required
-                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+                  className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 >
-                  <option value="">Select type</option>
+                  <option value="">
+                    Select type
+                  </option>
                   <option value="Apartment">
                     Apartment
                   </option>
@@ -491,7 +503,7 @@ export default function AccommodationDetails() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="mb-2 block text-sm font-medium">
                   Location
                 </label>
 
@@ -501,12 +513,12 @@ export default function AccommodationDetails() {
                   value={formData.location}
                   onChange={handleInputChange}
                   required
-                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+                  className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="mb-2 block text-sm font-medium">
                   Contact
                 </label>
 
@@ -516,12 +528,12 @@ export default function AccommodationDetails() {
                   value={formData.contact}
                   onChange={handleInputChange}
                   required
-                  className="w-full border rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+                  className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="mb-2 block text-sm font-medium">
                   Replace Image
                 </label>
 
@@ -532,7 +544,7 @@ export default function AccommodationDetails() {
                   className="w-full"
                 />
 
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="mt-2 text-xs text-gray-500">
                   Maximum file size: 5MB
                 </p>
               </div>
@@ -541,7 +553,7 @@ export default function AccommodationDetails() {
                 <button
                   type="button"
                   onClick={() => setShowEdit(false)}
-                  className="px-5 py-2 border rounded-lg hover:bg-gray-50"
+                  className="rounded-lg border px-5 py-2 hover:bg-gray-50"
                   disabled={updating}
                 >
                   Cancel
@@ -550,7 +562,7 @@ export default function AccommodationDetails() {
                 <button
                   type="submit"
                   disabled={updating}
-                  className="px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                  className="rounded-lg bg-black px-5 py-2 text-white hover:bg-gray-800 disabled:opacity-50"
                 >
                   {updating
                     ? "Updating..."

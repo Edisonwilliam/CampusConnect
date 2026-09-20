@@ -27,20 +27,6 @@ const categories = [
   "Others",
 ];
 
-const getImageUrl = (image?: string) => {
-  if (!image) {
-    return "/placeholder.jpg";
-  }
-
-  if (
-    image.startsWith("http://") ||
-    image.startsWith("https://")
-  ) {
-    return image;
-  }
-
-  return src={getImageUrl(image)};
-};
 
 const Marketplace = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -76,7 +62,7 @@ const Marketplace = () => {
             condition: listing.condition,
             location: listing.location,
             description: listing.description,
-            image: getImageUrl(listing.image),
+            image: listing.image
           })
         );
 
@@ -218,7 +204,7 @@ const Marketplace = () => {
         condition: result.condition,
         location: result.location,
         description: result.description,
-        image: getImageUrl(result.image),
+        image: result.image,
       };
 
       setProducts((prev) => [newProduct, ...prev]);
