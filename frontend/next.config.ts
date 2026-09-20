@@ -11,11 +11,15 @@ const nextConfig: NextConfig = {
         port: "5000",
         pathname: "/uploads/**",
       },
-
-       {
+      {
         protocol: "https",
         hostname: "campusconnect-qgah.onrender.com",
         pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
       },
     ],
   },
