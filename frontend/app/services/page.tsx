@@ -559,12 +559,11 @@ const ServicesPage = () => {
               const provider = `${service.user.firstName} ${service.user.lastName}`;
 
               const isOwner =
-                user?.id === service.user.id;
+                Number(user?.id) === Number(service.user.id);
 
               const isAdmin = user?.role === "admin";
 
-              const canManage =
-                isOwner || isAdmin;
+              const canManage = isOwner || isAdmin;
 
               return (
                 <div

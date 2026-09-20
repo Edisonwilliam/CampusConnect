@@ -52,7 +52,11 @@ export default function ServiceDetailsPage() {
 
         const data = await response.json();
 
-        setService(data);
+        const serviceData = Array.isArray(data)
+          ? data[0]
+          : data;
+
+        setService(serviceData || null);
       } catch (error) {
         if (
           error instanceof DOMException &&
