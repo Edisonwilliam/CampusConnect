@@ -3,6 +3,7 @@ import FeaturedContent from "./components/FeaturedContent";
 import Hero from "./components/Hero";
 import HowItWorks from "./components/HowItWorks";
 import WhatYouCanDo from "./components/WhatYouCanDo";
+import WhyCampusConnect from "./components/WhyCampusConnect";
 
 
 export default function Home() {
@@ -10,6 +11,7 @@ export default function Home() {
     <div>
       <Hero />
       <WhatYouCanDo />
+      <WhyCampusConnect/>
       <FeaturedContent/>
       <HowItWorks />
       <CTA />
